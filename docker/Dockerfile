@@ -1,8 +1,5 @@
 FROM ubuntu
 
-# ENV http_proxy "http://proxy1.altranit.corp.altran.com:8080"
-# ENV https_proxy "https://proxy1.altranit.corp.altran.com:8080"
-
 ENV TZ=Europe/Rome
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -11,8 +8,6 @@ RUN apt-get install telnet git autoconf automake libtool make gawk libreadline-d
 RUN pip3 install pytest
 RUN pip3 install pyang
 
-# RUN git config --global http.proxy http://proxy1.altranit.corp.altran.com:8080
-# RUN git config --global https.proxy https://proxy1.altranit.corp.altran.com:8080
 
 RUN git clone https://github.com/FRRouting/frr.git
 
@@ -29,9 +24,9 @@ RUN ./configure    --prefix=/usr    --localstatedir=/var/run/frr    --sysconfdir
 RUN make -j 32 
 RUN make install
 # Copy frr-bgpd YANG model
-COPY frr-queue/custom-yang/yang /yangmodels
-COPY frr-queue/custom-yang/yang /frr/yang
-COPY frr-queue/custom-yang/bgpd /frr/bgpd
+COPY bgpd-northbound/custom-yang/yang /yangmodels
+COPY bgpd-northbound/custom-yang/yang /frr/yang
+COPY bgpd-northbound/custom-yang/bgpd /frr/bgpd
 
 # Make frr based on new changes
 RUN make -j 32 -B
@@ -44,22 +39,22 @@ RUN install -m 775 -o root -g root -d /var/log/frr
 RUN install -m 640 -o root -g root /frr/tools/etc/frr/daemons.conf /etc/frr/daemons.conf
 
 # Copy the source
-COPY frr-queue/eolo_tests /root/eolo_tests
+COPY bgpd-northbound/docker /root/docker
 
 # Our own config file
-RUN cp /root/eolo_tests/daemons /root/daemons
+RUN cp /root/docker/daemons /root/daemons
 RUN install -m 640 -o root -g root /root/daemons /etc/frr/daemons
 # Allow forwarding
 RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 RUN echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
 
 # Healthcheck script
-RUN cp /root/eolo_tests/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN cp /root/docker/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/healthcheck.sh
 HEALTHCHECK CMD /usr/local/bin/healthcheck.sh || exit 1
 
 # Start-up script
-RUN cp /root/eolo_tests/docker-start /usr/sbin/docker-start
+RUN cp /root/docker/docker-start /usr/sbin/docker-start
 RUN chmod +x /usr/sbin/docker-start
 ENTRYPOINT ["/usr/sbin/docker-start"]
 
