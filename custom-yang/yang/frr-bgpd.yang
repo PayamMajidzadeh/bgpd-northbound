@@ -1,0 +1,103 @@
+module frr-bgpd {
+  yang-version 1.1;
+  namespace "http://frrouting.org/yang/bgpd";
+  prefix frr-bgpd;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  // import ietf-yang-types {
+  //   prefix yang;
+  // }
+  // import frr-interface {
+  //   prefix frr-interface;
+  // }
+  // import frr-route-types {
+  //   prefix frr-route-types;
+  // }
+
+  organization
+    "FRRouting";
+  contact
+    "FRR Users List:       <mailto:frog@lists.frrouting.org>
+      FRR Development List: <mailto:dev@lists.frrouting.org>";
+  description
+    "This module defines a model for managing FRR bgpd daemon.
+      This model supports the following BGP configuration level
+     hierarchy:
+     BGP
+      |
+      +-> [ global BGP configuration ]
+        +-> AFI / SAFI global
+      +-> peer group
+        +-> [ peer group config ]
+        +-> AFI / SAFI [ per-AFI overrides ]
+      +-> neighbor
+        +-> [ neighbor config ]
+        +-> [ optional pointer to peer-group ]
+        +-> AFI / SAFI [ per-AFI overrides ]";
+
+  revision 2020-08-17 {
+    description
+      "Initial revision";
+    reference
+      "RFC X";
+  }
+
+  /*
+   * Types specification.
+   */
+
+  typedef autonomous-system {
+    type uint32 {
+      range "1..4294967295";
+    }
+    description
+      "Administrative domain identification for a network";
+  }
+
+  /*
+   * BGP operational data.
+   */
+
+  container bgpd {
+    description
+      "BGP instances";
+    list instance {
+      key "asn vrf";
+      description
+        "BGP autonomous system instance";
+      leaf asn {
+        type autonomous-system;
+        description
+          "Autonomous System Number";
+      }
+      leaf vrf {
+        type string {
+          length "0..16";
+        }
+        description
+          "Virtual Routing Domain name";
+      }
+      /*
+       * Configurations.
+       */
+      leaf router-id {
+        type inet:ipv4-address;
+        description
+          "Router identification";
+      }
+      leaf-list network {
+        type inet:ipv4-prefix;
+        description
+          "Enable BGP on the specific network";
+      }
+      leaf-list neighbor {
+        type inet:ipv4-address;
+        description
+          "Specific BGP neighbor";
+      }
+    }
+  }
+}

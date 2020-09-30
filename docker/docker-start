@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+
+# Path for library
+ldconfig
+
+# Start FRR daemons
+/usr/sbin/zebra --tcli --vty_addr 127.0.0.1 --daemon --nl-bufsize 90000000 --config_file /etc/frr/conf/zebra.conf
+/usr/sbin/bgpd --tcli --vty_addr 127.0.0.1 --daemon --no_kernel --config_file /etc/frr/conf/bgpd.conf
+/usr/sbin/ospfd --tcli --vty_addr 127.0.0.1 --daemon --config_file /etc/frr/conf/ospfd.conf
+/usr/sbin/ripd --tcli --vty_addr 127.0.0.1 --daemon --config_file /etc/frr/conf/ripd.conf
+/usr/sbin/eigrpd --tcli --vty_addr 127.0.0.1 --daemon --config_file /etc/frr/conf/eigrpd.conf
+/usr/sbin/watchfrr --daemon -r '/usr/sbin/watchfrr.sh restart %s' -s '/usr/sbin/watchfrr.sh start %s' -k '/usr/sbin/watchfrr.sh stop %s' bgpd ospfd ripd eigrpd zebra
+
+tail -f /dev/null
